@@ -6,7 +6,7 @@ import org.nibali.klister.Klister._
 import scala.reflect.ClassTag
 
 import org.apache.spark.rdd.RDD
-import org.apache.spark._
+import org.apache.spark.Logging
 import org.apache.spark.serializer.Serializer
 import org.apache.spark.SparkContext._
 

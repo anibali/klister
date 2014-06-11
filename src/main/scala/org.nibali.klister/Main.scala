@@ -25,6 +25,8 @@ object Main extends App {
 
   joined.saveAsTextFile(outFile)
 
+  println("Output contains " + joined.count() + " records")
+
   // Stop Spark context
   sc.stop()
 }

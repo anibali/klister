@@ -7,8 +7,20 @@ import org.scalatest.FunSuite
 import org.apache.spark.SparkContext._
 import org.apache.spark.SharedSparkContext
  
-class KlisterPairRDDFunctionsSuite extends FunSuite with SharedSparkContext {
+class KlisterRDDFunctionsSuite extends FunSuite with SharedSparkContext {
   val nReducers = 2
+
+  test("quantiles") {
+    val s = sc.parallelize(Array(3, 6, 7, 8, 8, 10, 13, 15, 16, 20), 2)
+    val quants = s.quantiles(4, 1f)
+    assert(quants.toList === List(7, 8, 15))
+  }
+
+  test("histo") {
+    val s = sc.parallelize(Array(3, 6, 7, 8, 8, 10, 13, 15, 16, 20), 2)
+    val hist = s.histo(List(10, 15, 20))
+    assert(hist === Array(6, 2, 2, 0))
+  }
 
   test("kartesian") {
     val s = sc.parallelize(Array((2, "m"), (1, "a"), (1, "b")))

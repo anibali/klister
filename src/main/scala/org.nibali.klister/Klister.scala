@@ -27,6 +27,10 @@ object Klister {
     new KlisterRDDFunctions(rdd)
   }
 
+  implicit def rddToKlisterOrderedRDDFunctions[T:Ordering:ClassTag](rdd: RDD[T]) = {
+    new KlisterOrderedRDDFunctions(rdd)
+  }
+
   implicit def rddToKlisterPairRDDFunctions[K, V](rdd: RDD[(K, V)])
       (implicit kt: ClassTag[K], vt: ClassTag[V], ord: Ordering[K] = null) = {
     new KlisterPairRDDFunctions(rdd)
