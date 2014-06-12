@@ -1,6 +1,5 @@
 package org.nibali.klister
 
-import org.nibali.klister.okcan.MatrixPartitioner
 import org.nibali.klister.Klister._
 
 import scala.reflect.ClassTag

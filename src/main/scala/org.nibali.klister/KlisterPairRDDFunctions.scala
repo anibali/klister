@@ -1,6 +1,5 @@
 package org.nibali.klister
 
-import org.nibali.klister.okcan.MatrixPartitioner
 import org.nibali.klister.Klister._
 
 import scala.reflect.ClassTag
@@ -20,23 +19,30 @@ class KlisterPairRDDFunctions[K, V](self: RDD[(K, V)])
   extends Logging
   with Serializable
 {
-  private val ordering = implicitly[Ordering[K]]
-
-  def thetaJoin[W](other: RDD[(K, W)], joinCond:((K, K) => Boolean), nReducers:Int = 1):RDD[((K, V),(K, W))] = {
-    return self.kartesian(other, nReducers).
-      filter(x => joinCond.apply(x._1._1, x._2._1))
+  def thetaJoin[W](other: RDD[(K, W)], joinCond:((K, K) => Boolean),
+      nReducers:Int = 1):RDD[((K, V),(K, W))] = {
+    val srm = SimpleRegionMapper(self, other, nReducers)
+    return _thetaJoin(other, joinCond, srm)
   }
 
-  def inequalityJoin[W](other: RDD[(K, W)], op: Comparison.Comparison, nReducers:Int = 1):RDD[((K, V),(K, W))] = {
-    if(ordering == null) {
+  private[klister] def _thetaJoin[W](other: RDD[(K, W)], joinCond:((K, K) => Boolean),
+      rm:RegionMapper[(K,V),(K,W)]):RDD[((K, V),(K, W))] = {
+    return self._kartesian(other, rm).filter(x => joinCond.apply(x._1._1, x._2._1))
+  }
+
+  def inequalityJoin[W](other: RDD[(K, W)], op: Comparison.Comparison,
+      nReducers:Int = 1):RDD[((K, V),(K, W))] = {
+    if(ord == null) {
       throw new RuntimeException("Key type does not have an Ordering")
     }
-    // TODO: Preprocessing to optimise join
-    return self.thetaJoin(other, (a, b) => op.get.contains(ordering.compare(a, b)), nReducers)
+    // TODO: Write and use an InequalityRegionMapper
+    return thetaJoin(other, (a, b) => op.get.contains(ord.compare(a, b)), nReducers)
   }
 
   def equijoin[W](other: RDD[(K, W)], nReducers:Int = 1):RDD[(K,(V, W))] = {
-    return self.inequalityJoin(other, Comparison.Eq, nReducers).
+    val erm = EquijoinRegionMapper(self, other, nReducers)
+
+    return _thetaJoin(other, _ == _, erm).
       map(x => (x._1._1, (x._1._2, x._2._2)))
   }
 }
