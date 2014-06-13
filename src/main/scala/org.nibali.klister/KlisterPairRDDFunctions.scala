@@ -35,14 +35,12 @@ class KlisterPairRDDFunctions[K, V](self: RDD[(K, V)])
     if(ord == null) {
       throw new RuntimeException("Key type does not have an Ordering")
     }
-    // TODO: Write and use an InequalityRegionMapper
-    return thetaJoin(other, (a, b) => op.get.contains(ord.compare(a, b)), nReducers)
+    val rm = ComparatorRegionMapper(self, other, op, nReducers)
+    return _thetaJoin(other, (a, b) => op.get.contains(ord.compare(a, b)), rm)
   }
 
   def equijoin[W](other: RDD[(K, W)], nReducers:Int = 1):RDD[(K,(V, W))] = {
-    val erm = EquijoinRegionMapper(self, other, nReducers)
-
-    return _thetaJoin(other, _ == _, erm).
+    return inequalityJoin(other, Comparison.Eq, nReducers).
       map(x => (x._1._1, (x._1._2, x._2._2)))
   }
 }
