@@ -3,7 +3,7 @@ package org.nibali.klister
 /**
 * Represents a 2D range, including upper bound and excluding lower bound
 */
-class Range2D[K](lx:Option[K], ly:Option[K], ux:Option[K], uy:Option[K])
+class Range2D[K](val lx:Option[K], val ly:Option[K], val ux:Option[K], val uy:Option[K])
   (implicit ordering: Ordering[K])
   extends Serializable
 {
