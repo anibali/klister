@@ -4,15 +4,15 @@ import org.nibali.klister.Klister._
 
 import org.scalatest._
  
-class ComparatorRegionMapperSuite extends FlatSpec with Matchers {
-  "ComparatorRegionMapper" should "not cause output duplication" in {
+class PrunedRegionMapperSuite extends FlatSpec with Matchers {
+  "PrunedRegionMapper" should "not cause output duplication" in {
     // A list of ranges covering all 'true' cells in our join matrix
     val ranges = List(
       (1, 1, 2, 2),
       (2, 1, 3, 2),
       (2, 2, 3, 3)
     ).map(x => new Range2D(Some(x._1), Some(x._2), Some(x._3), Some(x._4)))
-    val crm = new ComparatorRegionMapper[Int, Any, Any](ranges, 2)
+    val crm = new PrunedRegionMapper[Int, Any, Any](ranges, 2)
     // A list of pairs of join keys which are candidates for join output
     val candidates = List(
       (2, 2),
