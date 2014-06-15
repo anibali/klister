@@ -20,6 +20,8 @@ class KlisterRDDFunctionsSuite extends FunSuite with SharedSparkContext {
     val s = sc.parallelize(Array(3, 6, 7, 8, 8, 10, 13, 15, 16, 20), 2)
     val hist = s.histo(List(10, 15, 20))
     assert(hist === Array(6, 2, 2, 0))
+    val hist2 = s.histo(List(8, 8, 8))
+    assert(hist2 === Array(5, 0, 0, 5))
   }
 
   test("kartesian") {

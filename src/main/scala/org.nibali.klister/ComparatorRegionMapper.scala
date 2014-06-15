@@ -14,19 +14,26 @@ object ComparatorRegionMapper
     val sKeys = s.map(_._1)
     val tKeys = t.map(_._1)
     val bothKeys = sKeys.union(tKeys)
-    val nSamples = math.min(sCount + tCount, 1024)
-    val q = math.min(64, (nSamples / 2.0).toInt)
-    val quants = bothKeys.quantiles(q, nSamples.toFloat/(sCount + tCount)).distinct.toArray
-    val sHistogram = sKeys.histo(quants)
-    val tHistogram = tKeys.histo(quants)
+
+    // These calculations could be tuned
+    var q = nReducers * 4
+    val nSamples = math.min(q * 32, sCount + tCount).toInt
+    if(nSamples < q) {
+      q = nSamples - 1
+    }
 
     var candidateRanges = List[Range2D[K]]()
-    for(i <- 0 until sHistogram.size) {
-      for(j <- 0 until tHistogram.size) {
-        if((i == j || op.get.contains(i.compareTo(j))) && sHistogram(i) > 0 && tHistogram(j) > 0) {
-          candidateRanges = new Range2D(
-            quants.lift(i-1), quants.lift(j-1), quants.lift(i), quants.lift(j)
-          ) :: candidateRanges
+    if(q > 0) {
+      val quants = bothKeys.quantiles(q, nSamples.toFloat/(sCount + tCount)).distinct.toArray
+      val sHistogram = sKeys.histo(quants)
+      val tHistogram = tKeys.histo(quants)
+      for(i <- 0 until sHistogram.size) {
+        for(j <- 0 until tHistogram.size) {
+          if((i == j || op.get.contains(i.compareTo(j))) && sHistogram(i) > 0 && tHistogram(j) > 0) {
+            candidateRanges = new Range2D(
+              quants.lift(i-1), quants.lift(j-1), quants.lift(i), quants.lift(j)
+            ) :: candidateRanges
+          }
         }
       }
     }
