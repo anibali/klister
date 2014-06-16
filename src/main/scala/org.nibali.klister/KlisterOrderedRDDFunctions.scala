@@ -25,15 +25,12 @@ class KlisterOrderedRDDFunctions[T:Ordering:ClassTag](self: RDD[T])
   * the records sampled from the RDD MUST all fit in one reducer
   */
   private[klister] def quantiles(q:Int, fraction:Float=1):Seq[T] = {
-    val sampled = self.sample(false, fraction)
-    val step = sampled.count().toFloat / q
-    val quants = sampled.coalesce(1, true).glom().flatMap(a => {
-      util.Sorting.quickSort(a)
-      (1 until q).map(i => {
-        a(math.ceil(i * step).toInt - 1)
-      })
+    val samples = self.sample(false, fraction).collect().sorted.toArray
+    val step = samples.size.toFloat / q
+    val quants = (1 until q).map(i => {
+      samples(math.ceil(i * step).toInt - 1)
     })
-    return quants.collect()
+    return quants
   }
 
   private def findBucket[W:Ordering](boundaries:Seq[W], elem:W):Int = {
