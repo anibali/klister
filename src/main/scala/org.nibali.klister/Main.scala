@@ -16,10 +16,11 @@ object Main extends App {
   // Create Spark context
   val sc = new SparkContext(conf)
 
-  val rdds = args.take(2).map(file => {
-    sc.textFile(file).map(x => x.split("\\W+").map(_.toInt)).map(a => (a(0), a(1)))
-  })
   val nReducers = args(2).toInt
+  val rdds = args.slice(0, 2).map(file => {
+    sc.textFile(file, math.round(math.sqrt(nReducers)).toInt).
+      map(x => x.split("\\W+").map(_.toInt)).map(a => (a(0), a(1)))
+  })
 
   var joined:RDD[((Int, Int),(Int, Int))] = null
   args(3) match {
@@ -35,18 +36,10 @@ object Main extends App {
 
   if(joined != null)
   {
-    println("Output contains " + joined.count() + " records")
-
-    println("Reducer output record counts:")
-
-    joined.mapPartitions(iter => {
-      var cnt = 0
-      while (iter.hasNext) {
-        iter.next
-        cnt += 1
-      }
-      List(cnt).iterator
-    }).collect().foreach(println)
+    val counts = joined.mapPartitions(iter => List(iter.size).iterator).collect()
+    println("Output contains " + counts.sum + " records")
+    println("Individual partition record counts:")
+    counts.foreach(println)
   }
 
   // Stop Spark context
