@@ -33,20 +33,13 @@ class KlisterOrderedRDDFunctions[T:Ordering:ClassTag](self: RDD[T])
     return quants
   }
 
-  private def findBucket[W:Ordering](boundaries:Seq[W], elem:W):Int = {
-    // TODO: optimise with binary search
-    val ord = Ordering[W]
-    var bucket = 0
-    boundaries.foreach(b =>
-      if(ord.gt(elem, b))
-        bucket += 1
-    )
-    return bucket
-  }
-
+  /**
+  * Generate a histogram for the RDD with buckets defined by the specified
+  * boundaries
+  */
   private[klister] def histo(boundaries:Seq[T]):Array[Int] = {
     val sums = self.map(x =>
-      (findBucket(boundaries, x), 1)
+      (Util.findBucket(boundaries, x), 1)
     ).reduceByKey((x:Int, y:Int) => x + y).collect()
     val hg = new Array[Int](boundaries.size + 1)
     sums.foreach(pair => hg(pair._1) = pair._2)
