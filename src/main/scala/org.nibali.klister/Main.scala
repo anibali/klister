@@ -15,6 +15,7 @@ object Main extends App {
   conf.set("spark.eventLog.dir", "hdfs://localhost:8020/user/cloudera/spark_logs")
   // Create Spark context
   val sc = new SparkContext(conf)
+  sc.addSparkListener(new BenchmarkListener(System.out))
 
   val nReducers = args(2).toInt
   val rdds = args.slice(0, 2).map(file => {
