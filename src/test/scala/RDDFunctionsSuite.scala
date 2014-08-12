@@ -7,7 +7,7 @@ import org.scalatest.FunSuite
 import org.apache.spark.SparkContext._
 import org.apache.spark.SharedSparkContext
  
-class KlisterRDDFunctionsSuite extends FunSuite with SharedSparkContext {
+class RDDFunctionsSuite extends FunSuite with SharedSparkContext {
   val nReducers = 2
 
   test("quantiles") {
@@ -84,6 +84,17 @@ class KlisterRDDFunctionsSuite extends FunSuite with SharedSparkContext {
       (1, ("b", "C")),
       (1, ("b", "D")),
       (2, ("m", "N"))
+    ))
+  }
+
+  test("naiveSimilarityJoin") {
+    val s = sc.parallelize(Array(("rocket", 1), ("spark", 2)))
+    val t = sc.parallelize(Array(("raps", "Z"), ("sprocket", "C"), ("spark", "D")))
+    val joined = s.naiveSimilarityJoin(t, 2, 0.5f).collect()
+    assert(joined.size === 2)
+    assert(joined.toSet === Set(
+      (("spark", 2), ("spark", "D")),
+      (("rocket", 1), ("sprocket", "C"))
     ))
   }
 }

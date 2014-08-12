@@ -35,4 +35,9 @@ object Klister {
       (implicit kt: ClassTag[K], vt: ClassTag[V], ord: Ordering[K] = null) = {
     new KlisterPairRDDFunctions(rdd)
   }
+
+  implicit def rddToKlisterStringKeyRDDFunctions[V](rdd: RDD[(String, V)])
+      (implicit vt: ClassTag[V]) = {
+    new KlisterStringKeyRDDFunctions(rdd)
+  }
 }

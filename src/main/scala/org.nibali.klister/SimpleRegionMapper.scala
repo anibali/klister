@@ -26,9 +26,8 @@ class SimpleRegionMapper[S:ClassTag,T:ClassTag]
 
   private def init()
   {
-    require(sCount >= 0, "sCount must not be negative")
-    require(tCount >= 0, "tCount must not be negative")
-
+    require(sCount > 0, "sCount must be positive")
+    require(tCount > 0, "tCount must be positive")
     breakable { (1L to tCount).foreach(i => {
       nhor = math.ceil(tCount / i.toFloat).toInt
       nver = math.ceil(sCount / i.toFloat).toInt
