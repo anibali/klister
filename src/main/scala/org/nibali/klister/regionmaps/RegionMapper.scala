@@ -1,4 +1,4 @@
-package org.nibali.klister
+package org.nibali.klister.regionmaps
 
 abstract class RegionMapper[S,T](val nReducers:Int) extends Serializable
 {

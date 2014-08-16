@@ -1,8 +1,9 @@
 package org.nibali.klister
 
 import org.nibali.klister.Klister._
-
 import org.scalatest._
+import org.nibali.klister.regionmaps.PrunedRegionMapper
+import org.nibali.klister.regionmaps.Range2D
  
 class PrunedRegionMapperSuite extends FlatSpec with Matchers {
   "PrunedRegionMapper" should "not cause output duplication" in {

@@ -2,4 +2,6 @@ target/
 /run.sh
 *.class
 *.jar
-/.idea
+/.classpath
+/.cache
+/.project

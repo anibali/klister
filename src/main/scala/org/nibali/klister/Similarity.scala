@@ -4,6 +4,9 @@ import scala.collection.mutable
 
 object Similarity
 {
+  /**
+   * Calculate a minhash signature
+   */
   def minhashSignature(nHashes:Int, hashFn:(Int, Int) => Int, features:Set[Int]):Array[Int] = {
     val sig = Array.fill(nHashes) {Int.MaxValue}
     features.foreach(feature => {
@@ -14,8 +17,11 @@ object Similarity
     return sig
   }
 
-  def universalHash(index:Int, x:Int):Int = {
-    val rand = new scala.util.Random(index)
+  /**
+   * Map x to another Int using the ith hash function in this family
+   */
+  def universalHash(i:Int, x:Int):Int = {
+    val rand = new scala.util.Random(i)
     val a = rand.nextInt(Int.MaxValue - 1) + 1
     val b = rand.nextInt(Int.MaxValue - 1) + 1
     // Note: Conversion to int is same as doing 'mod <prime>' because
@@ -23,7 +29,11 @@ object Similarity
     return (a * x + b).toInt
   }
 
+  /**
+   * Break doc into k-shingles and return a set containing the hashcode of
+   * each shingle
+   */
   def hashedShingles(doc:String, k:Int = 9):Set[Int] = {
-    doc.toLowerCase.sliding(k).map(_.hashCode).toSet
+    doc.toLowerCase().sliding(k).map(_.hashCode).toSet
   }
 }

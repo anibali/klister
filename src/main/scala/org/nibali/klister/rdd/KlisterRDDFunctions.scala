@@ -1,13 +1,12 @@
-package org.nibali.klister
+package org.nibali.klister.rdd
 
 import org.nibali.klister.Klister._
-
 import scala.reflect.ClassTag
-
 import org.apache.spark.rdd.RDD
 import org.apache.spark.Logging
-import org.apache.spark.serializer.Serializer
 import org.apache.spark.SparkContext._
+import org.nibali.klister.regionmaps.RegionMapper
+import org.nibali.klister.regionmaps.SimpleRegionMapper
 
 /**
 * Extra functions on RDDs provided by Klister through an implicit

@@ -1,4 +1,4 @@
-package org.nibali.klister
+package org.nibali.klister.regionmaps
 
 /**
 * Represents a 2D range, including upper bound and excluding lower bound

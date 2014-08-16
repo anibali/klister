@@ -1,7 +1,5 @@
 package org.nibali.klister
 
-import org.nibali.klister.Klister._
-
 import org.scalatest.FunSuite
 import org.scalautils.Tolerance._
  

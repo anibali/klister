@@ -1,8 +1,8 @@
 package org.nibali.klister
 
 import org.nibali.klister.Klister._
-
 import org.scalatest.FunSuite
+import org.nibali.klister.regionmaps.Range2D
  
 class Range2DSuite extends FunSuite {
   test("containsX") {

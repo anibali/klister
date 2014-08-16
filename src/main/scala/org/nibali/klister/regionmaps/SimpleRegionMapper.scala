@@ -1,9 +1,7 @@
-package org.nibali.klister
+package org.nibali.klister.regionmaps
 
-import org.nibali.klister.Klister._
-
+import org.nibali.klister
 import org.apache.spark.rdd.RDD
-
 import scala.reflect.ClassTag
 import scala.util.control.Breaks._
 

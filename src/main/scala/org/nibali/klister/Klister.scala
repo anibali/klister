@@ -4,6 +4,10 @@ import scala.language.implicitConversions
 import scala.reflect.ClassTag
 import org.apache.spark._
 import org.apache.spark.rdd.RDD
+import rdd.KlisterPairRDDFunctions
+import rdd.KlisterStringKeyRDDFunctions
+import rdd.KlisterRDDFunctions
+import rdd.KlisterOrderedRDDFunctions
 
 object Klister {
   object Comparison extends Enumeration {
