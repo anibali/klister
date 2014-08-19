@@ -1,5 +1,7 @@
 package org.nibali.klister
 
+import scala.compat.Platform
+
 object Util
 {
   /**
@@ -16,5 +18,11 @@ object Util
         bucket += 1
     )
     return bucket
+  }
+  
+  def time(f: => Unit):Long = {
+    val time = Platform.currentTime
+    f
+    return Platform.currentTime - time
   }
 }

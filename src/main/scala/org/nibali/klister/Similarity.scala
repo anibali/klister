@@ -36,4 +36,8 @@ object Similarity
   def hashedShingles(doc:String, k:Int = 9):Set[Int] = {
     doc.toLowerCase().sliding(k).map(_.hashCode).toSet
   }
+  
+  def jaccard[T](a:Set[T], b:Set[T]):Float = {
+    a.intersect(b).size.toFloat / a.union(b).size
+  }
 }
