@@ -37,7 +37,17 @@ object Similarity
     doc.toLowerCase().sliding(k).map(_.hashCode).toSet
   }
   
+  /**
+   * Calculate the Jaccard similarity between two sets
+   */
   def jaccard[T](a:Set[T], b:Set[T]):Float = {
-    a.intersect(b).size.toFloat / a.union(b).size
+    var intersection = 0f
+    a.foreach(elem => {
+      if(b.contains(elem)) {
+        intersection += 1
+      }
+    })
+    val union:Float = a.size + b.size - intersection
+    return intersection / union
   }
 }

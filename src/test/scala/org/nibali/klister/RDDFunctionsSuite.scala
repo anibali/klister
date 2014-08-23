@@ -87,10 +87,10 @@ class RDDFunctionsSuite extends FunSuite with SharedSparkContext {
     ))
   }
 
-  test("naiveSimilarityJoin") {
+  test("approxSimilarityJoin") {
     val s = sc.parallelize(Array(("rocket", 1), ("spark", 2)))
     val t = sc.parallelize(Array(("raps", "Z"), ("sprocket", "C"), ("spark", "D")))
-    val joined = s.naiveSimilarityJoin(t, 2, 0.5f).collect()
+    val joined = s.approxSimilarityJoin(t, 2, 0.5f).collect()
     assert(joined.size === 2)
     assert(joined.toSet === Set(
       (("spark", 2), ("spark", "D")),

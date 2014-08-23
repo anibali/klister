@@ -31,23 +31,36 @@ class KlisterStringKeyRDDFunctions[V](self: RDD[(String, V)])
       val sig = Similarity.minhashSignature(nHashes, Similarity.universalHash, shings)
       (sig, pair)
     })
-    val sb = s.flatMap(p => {
-      var list = List[(Int, (String, V))]()
-      Range(0, b).foreach(i => {
-        list ::= (Arrays.hashCode(p._1.slice(i * r, (i + 1) * r)), p._2)
-      })
-      list
-    })
-    val tb = t.flatMap(p => {
-      var list = List[(Int, (String, W))]()
-      Range(0, b).foreach(i => {
-        list ::= (Arrays.hashCode(p._1.slice(i * r, (i + 1) * r)), p._2)
-      })
-      list
-    })
+    val sb = hashBands(s, r)
+    val tb = hashBands(t, r)
     sb.join(tb).map(_._2).filter(p => {
       Similarity.jaccard(Similarity.hashedShingles(p._1._1, shingleSize), Similarity.hashedShingles(p._2._1, shingleSize)) > thresh
     }).distinct()
+  }
+  
+  /**
+   * Takes an RDD of signature/payload pairs and produces a larger RDD of
+   * band-hash/payload pairs
+   */
+  private def hashBands[T](rdd:RDD[(Array[Int], T)], r:Int):RDD[(Int, T)] = {
+    rdd.flatMap(p => {
+      var list = List[(Int, T)]()
+      var i = 0
+      var hash = 0
+      p._1.foreach(sigPart => {
+        if(i % r == 0) {
+          if(i > 0) {
+            list ::= (hash, p._2)
+          }
+          hash = 1
+          hash = 31 * hash + i
+        }
+        hash = 31 * hash + sigPart
+        i += 1
+      })
+      list ::= (hash, p._2)
+      list
+    })
   }
   
   /**
