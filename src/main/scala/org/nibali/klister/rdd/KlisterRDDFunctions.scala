@@ -1,6 +1,7 @@
 package org.nibali.klister.rdd
 
 import org.nibali.klister.Klister._
+import org.nibali.klister.Util
 import scala.reflect.ClassTag
 import org.apache.spark.rdd.RDD
 import org.apache.spark.Logging
@@ -27,5 +28,21 @@ class KlisterRDDFunctions[T:ClassTag](self: RDD[T])
     val tt = other.flatMap(e => {rm.getTRegions(e).map(region => (region, e))})
 
     return ss.join(tt, rm.nReducers).map(_._2)
+  }
+  
+  /**
+   * Creates a unique ID for each record in the RDD
+   * Using a different "brand" for different RDDs will result in the keys
+   * being unique across those RDDs
+   */
+  def keyify(brand:Int=0) = {
+    val partitionIndexBits = Util.log2(self.partitions.length)
+    self.mapPartitionsWithIndex((index:Int, iter: Iterator[T]) => {
+      var i = 0L
+      iter.map(elem => {
+        i += 1
+        (((i << partitionIndexBits) + index) | (brand << 60), elem)
+      })
+    })
   }
 }

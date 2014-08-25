@@ -22,7 +22,7 @@ object Main {
       
       // 4000 tweets, 18 matches, 16.66 seconds
       //val joined = numberedTweets.approxSimilarityJoin(numberedTweets, 5, 0.7f, 1)
-      // 4000 tweets, 19 matches, 9.21 seconds
+      // 4000 tweets, 19 matches, 6.22 seconds
       val joined = numberedTweets.bandingSimilarityJoin(numberedTweets, 5, 0.7f, 1)
       
       val different = joined.filter(a => a._1._2 > a._2._2).filter(a => !a._1._1.equals(a._2._1))

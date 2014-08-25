@@ -1,6 +1,7 @@
 package org.nibali.klister
 
 import scala.compat.Platform
+import org.apache.spark.rdd.RDD
 
 object Util
 {
@@ -24,5 +25,11 @@ object Util
     val time = Platform.currentTime
     f
     return Platform.currentTime - time
+  }
+  
+  def log2(x:Int):Int = x match {
+    case 0 => 0
+    case 1 => 1
+    case x if x > 1 => log2(x >> 1) + 1
   }
 }

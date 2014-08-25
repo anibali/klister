@@ -1,6 +1,7 @@
 package org.nibali.klister.rdd
 
 import org.nibali.klister.Klister._
+import org.nibali.klister.Util
 import scala.reflect.ClassTag
 import org.apache.spark.rdd.RDD
 import org.apache.spark.Logging
@@ -21,21 +22,37 @@ class KlisterStringKeyRDDFunctions[V](self: RDD[(String, V)])
     val b = 20
     var r = 5
     val nHashes = b * r
-    val s = self.map(pair => {
-      val shings = Similarity.hashedShingles(pair._1, shingleSize)
-      val sig = Similarity.minhashSignature(nHashes, Similarity.universalHash, shings)
-      (sig, pair)
-    })
-    val t = other.map(pair => {
-      val shings = Similarity.hashedShingles(pair._1, shingleSize)
-      val sig = Similarity.minhashSignature(nHashes, Similarity.universalHash, shings)
-      (sig, pair)
-    })
+    
+    val s = makeSignatures(self, shingleSize, nHashes)
+    val t = makeSignatures(other, shingleSize, nHashes)
+    
+    val smap = s.keyify(0)
+    val tmap = t.keyify(1)
+    val sb = hashBands(smap.map(p => (p._2._1, p._1)), r)
+    val tb = hashBands(tmap.map(p => (p._2._1, p._1)), r)
+    val join1 = sb.join(tb).map(_._2).distinct()
+    // This is the bit that needs clever optimisation
+    val join2 = join1.join(smap.map(p => (p._1, p._2._2))).map(_._2).join(tmap.map(p => (p._1, p._2._2))).map(_._2)
+    
+    /*
+    // Old-style "move everything around" version. Requires .distinct() call at
+    // very end
     val sb = hashBands(s, r)
     val tb = hashBands(t, r)
-    sb.join(tb).map(_._2).filter(p => {
+    val join2 = sb.join(tb).map(_._2)
+    */
+    
+    join2.filter(p => {
       Similarity.jaccard(Similarity.hashedShingles(p._1._1, shingleSize), Similarity.hashedShingles(p._2._1, shingleSize)) > thresh
-    }).distinct()
+    })
+  }
+  
+  private def makeSignatures[T](rdd:RDD[(String, T)], shingleSize:Int, nHashes:Int):RDD[(Array[Int], (String, T))] = {
+    rdd.map(pair => {
+      val shings = Similarity.hashedShingles(pair._1, shingleSize)
+      val sig = Similarity.minhashSignature(nHashes, Similarity.universalHash, shings)
+      (sig, pair)
+    })
   }
   
   /**
