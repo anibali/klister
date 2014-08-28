@@ -32,4 +32,13 @@ object Util
     case 1 => 1
     case x if x > 1 => log2(x >> 1) + 1
   }
+  
+  def lambertW(z:Double, guess:Double = 1):Double = {
+    require(z > 0)
+    val expGuess = math.exp(guess)
+    guess * expGuess match {
+      case zed if math.abs(zed - z) < 0.0001 => return guess
+      case _ => return lambertW(z, guess - (guess * expGuess - z) / (expGuess + guess * expGuess))
+    }
+  }
 }

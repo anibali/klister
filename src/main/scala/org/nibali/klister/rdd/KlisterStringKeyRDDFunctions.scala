@@ -19,8 +19,17 @@ class KlisterStringKeyRDDFunctions[V](self: RDD[(String, V)])
    * except perhaps when the number of output records approaches n^2
    */
   def bandingSimilarityJoin[W](other: RDD[(String, W)], shingleSize:Int, thresh:Float, nReducers:Int = 1):RDD[((String,V),(String,W))] = {
-    val b = 20
-    var r = 5
+    val maxHashes = 120
+    
+    var logTerm = 0.0
+    if(thresh > 0.15)
+      logTerm = math.log(1 / (thresh - 0.1))
+    else
+      logTerm = math.log(1 / 0.15)
+    val r = math.floor(Util.lambertW(maxHashes * logTerm) / logTerm).toInt
+    val b = maxHashes / r
+    println(r, b)
+    
     val nHashes = b * r
     
     val s = makeSignatures(self, shingleSize, nHashes)
