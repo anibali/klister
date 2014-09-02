@@ -29,11 +29,11 @@ object Main {
           case "similarity-approx" =>
             println("Approximate similarity join")
           	// 4000 tweets, 18 matches, 16.66 seconds
-          	joined = numberedTweets.approxSimilarityJoin(numberedTweets, 5, 0.7f, 1)
+          	joined = numberedTweets.approxSimilarityJoin(numberedTweets, 5, 0.7f, config.nodes)
           case "similarity-banding" =>
             println("Banding similarity join")
             // 4000 tweets, 19 matches, 6.22 seconds
-            joined = numberedTweets.bandingSimilarityJoin(numberedTweets, 5, 0.7f, 1)
+            joined = numberedTweets.bandingSimilarityJoin(numberedTweets, 5, 0.7f, config.nodes)
         }
 
         val different = joined.filter(a => a._1._2 > a._2._2).filter(a => !a._1._1.equals(a._2._1))
