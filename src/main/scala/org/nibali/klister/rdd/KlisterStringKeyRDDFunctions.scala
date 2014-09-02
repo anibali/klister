@@ -28,7 +28,6 @@ class KlisterStringKeyRDDFunctions[V](self: RDD[(String, V)])
       logTerm = math.log(1 / 0.15)
     val r = math.floor(Util.lambertW(maxHashes * logTerm) / logTerm).toInt
     val b = maxHashes / r
-    println(r, b)
     
     val nHashes = b * r
     
