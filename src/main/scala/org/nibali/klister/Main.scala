@@ -10,11 +10,14 @@ object Main {
   def main(args: Array[String]) {
 
     RunConfig.parse(args).map(config => {
-      print("Initializing Spark context...")
+      print("[KLISTER] Initializing Spark context...")
       val sparkConf = new SparkConf().setAppName("Klister")
       val sc = new SparkContext(sparkConf)
       //sc.addSparkListener(new BenchmarkListener(System.out))
       println(" done")
+      
+      var nRecords = -1L
+      var nMatches = -1L
 
       val elapsed = Util.time({
         sc.hadoopConfiguration.set("fs.s3n.awsAccessKeyId", config.awsAccessKeyId)
@@ -23,26 +26,28 @@ object Main {
         val tweets = sc.textFile(config.inputPath)
         val sampledTweets = tweets.sample(false, config.records / tweets.count.toFloat, 1234).repartition(config.nodes)
         val numberedTweets = sampledTweets.keyify().map(_.swap)
+        nRecords = numberedTweets.count()
 
         var joined:RDD[((String, Long), (String, Long))] = null
         config.joinType match {
           case "similarity-approx" =>
-            println("Approximate similarity join")
+            println("[KLISTER] Approximate similarity join")
           	// 4000 tweets, 18 matches, 16.66 seconds
-          	joined = numberedTweets.approxSimilarityJoin(numberedTweets, 5, 0.7f, config.nodes)
+          	joined = numberedTweets.approxSimilarityJoin(numberedTweets, 5, config.threshold, config.nodes)
           case "similarity-banding" =>
-            println("Banding similarity join")
+            println("[KLISTER] Banding similarity join")
             // 4000 tweets, 19 matches, 6.22 seconds
-            joined = numberedTweets.bandingSimilarityJoin(numberedTweets, 5, 0.7f, config.nodes)
+            joined = numberedTweets.bandingSimilarityJoin(numberedTweets, 5, config.threshold, config.nodes)
         }
 
         val different = joined.filter(a => a._1._2 > a._2._2).filter(a => !a._1._1.equals(a._2._1))
-
-        printf("Number of records: %d\n", numberedTweets.count())
-        //different.foreach(println)
-        printf("Total matches: %d\n", different.count())
+        
+        nMatches = different.count()
       })
-      printf("Elapsed time: %.2f s\n", elapsed / 1000f)
+      
+      printf("[KLISTER] Number of records: %d\n", nRecords)
+      printf("[KLISTER] Total matches: %d\n", nMatches)
+      printf("[KLISTER] Elapsed time: %.2f s\n", elapsed / 1000f)
 
       sc.stop()
     })

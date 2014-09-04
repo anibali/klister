@@ -8,6 +8,9 @@ object RunConfig {
 	  opt[Int]("nodes") optional() valueName(s"[=${defaults.nodes}]") action {(x, c) =>
 	    c.copy(nodes = x)
 	  } text("number of computational nodes")
+	  opt[Double]("threshold") optional() valueName(s"[=${defaults.threshold}]") action {(x, c) =>
+	    c.copy(threshold = x.toFloat)
+	  } text("similarity threshold")
 	  opt[Int]("records") optional() valueName(s"[=${defaults.records}]") action {(x, c) =>
 	    c.copy(records = x)
 	  } text("approximate number of records to sample from the data set")
@@ -29,6 +32,7 @@ object RunConfig {
 case class RunConfig(
   nodes: Int = 4,
   records: Int = 4000,
+  threshold: Float = 0.7f,
   inputPath: String = "",
   joinType: String = "similarity-banding",
   awsAccessKeyId: String = "",
