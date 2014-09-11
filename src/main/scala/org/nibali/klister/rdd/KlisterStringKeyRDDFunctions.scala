@@ -19,16 +19,7 @@ class KlisterStringKeyRDDFunctions[V](self: RDD[(String, V)])
    * except perhaps when the number of output records approaches n^2
    */
   def bandingSimilarityJoin[W](other: RDD[(String, W)], shingleSize:Int, thresh:Float, nReducers:Int = 1):RDD[((String,V),(String,W))] = {
-    val maxHashes = 120
-    
-    var logTerm = 0.0
-    if(thresh > 0.15)
-      logTerm = math.log(1 / (thresh - 0.1))
-    else
-      logTerm = math.log(1 / 0.15)
-    val r = math.floor(Util.lambertW(maxHashes * logTerm) / logTerm).toInt
-    val b = maxHashes / r
-    
+    val (r, b) = calcBandParams(thresh, 120)
     val nHashes = b * r
     
     val s = makeSignatures(self, shingleSize, nHashes)
@@ -38,23 +29,64 @@ class KlisterStringKeyRDDFunctions[V](self: RDD[(String, V)])
     val tmap = t.keyify(1)
     val sb = hashBands(smap.map(p => (p._2._1, p._1)), r)
     val tb = hashBands(tmap.map(p => (p._2._1, p._1)), r)
-    val join1 = sb.join(tb).map(_._2).distinct()
-    // This is the bit that needs clever optimisation
-    val join2 = join1.join(smap.map(p => (p._1, p._2._2))).map(_._2).join(tmap.map(p => (p._1, p._2._2))).map(_._2)
     
-    /*
-    // Old-style "move everything around" version. Requires .distinct() call at
-    // very end
-    val sb = hashBands(s, r)
-    val tb = hashBands(t, r)
-    val join2 = sb.join(tb).map(_._2)
-    */
+    val idPairs = sb.join(tb).map(_._2).distinct()
+    val recordPairs = idPairs.join(smap.map(p => (p._1, p._2._2))).map(_._2).join(tmap.map(p => (p._1, p._2._2))).map(_._2)
     
-    join2.filter(p => {
+    recordPairs.filter(p => {
       Similarity.jaccard(Similarity.hashedShingles(p._1._1, shingleSize), Similarity.hashedShingles(p._2._1, shingleSize)) > thresh
     })
   }
   
+  def bandingSimilarityJoinNew[W](other: RDD[(String, W)], shingleSize:Int, thresh:Float, nReducers:Int = 1):RDD[((String,V),(String,W))] = {
+    val (r, b) = calcBandParams(thresh, 120)
+    val nHashes = b * r
+    
+    val s = makeSignatures(self, shingleSize, nHashes)
+    val t = makeSignatures(other, shingleSize, nHashes)
+    
+    val smap = s.keyify(0)
+    val tmap = t.keyify(1)
+    val sb = hashBands(smap.map(p => (p._2._1, p._1)), r)
+    val tb = hashBands(tmap.map(p => (p._2._1, p._1)), r)
+    
+    val idPairs = sb.equijoin(tb).map(_._2).distinct()
+    val recordPairs = idPairs.equijoin(smap.map(p => (p._1, p._2._2))).map(_._2).equijoin(tmap.map(p => (p._1, p._2._2))).map(_._2)
+    
+    recordPairs.filter(p => {
+      Similarity.jaccard(Similarity.hashedShingles(p._1._1, shingleSize), Similarity.hashedShingles(p._2._1, shingleSize)) > thresh
+    })
+  }
+  
+  def bandingSimilarityJoinBad[W](other: RDD[(String, W)], shingleSize:Int, thresh:Float, nReducers:Int = 1):RDD[((String,V),(String,W))] = {
+    val (r, b) = calcBandParams(thresh, 120)
+    val nHashes = b * r
+    
+    val s = makeSignatures(self, shingleSize, nHashes)
+    val t = makeSignatures(other, shingleSize, nHashes)
+    
+    // Old-style "move everything around" version. Requires .distinct() call at
+    // very end
+    val sb = hashBands(s, r)
+    val tb = hashBands(t, r)
+    val recordPairs = sb.join(tb).map(_._2)
+    
+    recordPairs.filter(p => {
+      Similarity.jaccard(Similarity.hashedShingles(p._1._1, shingleSize), Similarity.hashedShingles(p._2._1, shingleSize)) > thresh
+    }).distinct()
+  }
+  
+  private def calcBandParams(thresh:Float, maxHashes:Int=120) = {
+    var logTerm = 0.0
+    if(thresh > 0.15)
+      logTerm = math.log(1 / (thresh - 0.1))
+    else
+      logTerm = math.log(1 / 0.15)
+    val r = math.floor(Util.lambertW(maxHashes * logTerm) / logTerm).toInt
+    val b = maxHashes / r
+    (r, b)
+  }
+
   private def makeSignatures[T](rdd:RDD[(String, T)], shingleSize:Int, nHashes:Int):RDD[(Array[Int], (String, T))] = {
     rdd.map(pair => {
       val shings = Similarity.hashedShingles(pair._1, shingleSize)
@@ -113,5 +145,11 @@ class KlisterStringKeyRDDFunctions[V](self: RDD[(String, V)])
       })
       matches / nHashes > thresh
     }, nReducers).map(x => (x._1._2, x._2._2))
+  }
+  
+  def naiveSimilarityJoin[W](other: RDD[(String, W)], shingleSize:Int, thresh:Float, nReducers:Int = 1):RDD[((String,V),(String,W))] = {
+    self.cartesian(other).filter(pair => {
+      Similarity.jaccard(Similarity.hashedShingles(pair._1._1, shingleSize), Similarity.hashedShingles(pair._2._1, shingleSize)) > thresh
+    })
   }
 }

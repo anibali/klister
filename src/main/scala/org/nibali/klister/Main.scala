@@ -30,26 +30,33 @@ object Main {
 
         var joined:RDD[((String, Long), (String, Long))] = null
         config.joinType match {
+          case "similarity-naive" =>
+            println("[KLISTER] Naive similarity join")
+          	joined = numberedTweets.naiveSimilarityJoin(numberedTweets, 5, config.threshold, config.nodes)
           case "similarity-approx" =>
             println("[KLISTER] Approximate similarity join")
-          	// 4000 tweets, 18 matches, 16.66 seconds
           	joined = numberedTweets.approxSimilarityJoin(numberedTweets, 5, config.threshold, config.nodes)
           case "similarity-banding" =>
             println("[KLISTER] Banding similarity join")
-            // 4000 tweets, 19 matches, 6.22 seconds
             joined = numberedTweets.bandingSimilarityJoin(numberedTweets, 5, config.threshold, config.nodes)
+          case "similarity-banding-new" =>
+            println("[KLISTER] New banding similarity join")
+            joined = numberedTweets.bandingSimilarityJoinNew(numberedTweets, 5, config.threshold, config.nodes)
+          case "similarity-banding-bad" =>
+            println("[KLISTER] Bad banding similarity join")
+            joined = numberedTweets.bandingSimilarityJoinBad(numberedTweets, 5, config.threshold, config.nodes)
         }
 
         val different = joined.filter(a => a._1._2 > a._2._2).filter(a => !a._1._1.equals(a._2._1))
         
         nMatches = different.count()
       })
+
+      sc.stop()
       
       printf("[KLISTER] Number of records: %d\n", nRecords)
       printf("[KLISTER] Total matches: %d\n", nMatches)
       printf("[KLISTER] Elapsed time: %.2f s\n", elapsed / 1000f)
-
-      sc.stop()
     })
   }
 }
