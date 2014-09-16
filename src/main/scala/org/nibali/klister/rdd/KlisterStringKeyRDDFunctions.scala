@@ -18,8 +18,8 @@ class KlisterStringKeyRDDFunctions[V](self: RDD[(String, V)])
    * Uses banding to prune records. Better than naive and approx implementations
    * except perhaps when the number of output records approaches n^2
    */
-  def bandingSimilarityJoin[W](other: RDD[(String, W)], shingleSize:Int, thresh:Float, nReducers:Int = 1):RDD[((String,V),(String,W))] = {
-    val (r, b) = calcBandParams(thresh, 120)
+  def bandingSimilarityJoin[W](other: RDD[(String, W)], shingleSize:Int, thresh:Float, maxHashes:Int, nReducers:Int = 1):RDD[((String,V),(String,W))] = {
+    val (r, b) = calcBandParams(thresh, maxHashes)
     val nHashes = b * r
     
     val s = makeSignatures(self, shingleSize, nHashes)
@@ -38,28 +38,8 @@ class KlisterStringKeyRDDFunctions[V](self: RDD[(String, V)])
     })
   }
   
-  def bandingSimilarityJoinNew[W](other: RDD[(String, W)], shingleSize:Int, thresh:Float, nReducers:Int = 1):RDD[((String,V),(String,W))] = {
-    val (r, b) = calcBandParams(thresh, 120)
-    val nHashes = b * r
-    
-    val s = makeSignatures(self, shingleSize, nHashes)
-    val t = makeSignatures(other, shingleSize, nHashes)
-    
-    val smap = s.keyify(0)
-    val tmap = t.keyify(1)
-    val sb = hashBands(smap.map(p => (p._2._1, p._1)), r)
-    val tb = hashBands(tmap.map(p => (p._2._1, p._1)), r)
-    
-    val idPairs = sb.equijoin(tb).map(_._2).distinct()
-    val recordPairs = idPairs.equijoin(smap.map(p => (p._1, p._2._2))).map(_._2).equijoin(tmap.map(p => (p._1, p._2._2))).map(_._2)
-    
-    recordPairs.filter(p => {
-      Similarity.jaccard(Similarity.hashedShingles(p._1._1, shingleSize), Similarity.hashedShingles(p._2._1, shingleSize)) > thresh
-    })
-  }
-  
-  def bandingSimilarityJoinBad[W](other: RDD[(String, W)], shingleSize:Int, thresh:Float, nReducers:Int = 1):RDD[((String,V),(String,W))] = {
-    val (r, b) = calcBandParams(thresh, 120)
+  def bandingSimilarityJoinBad[W](other: RDD[(String, W)], shingleSize:Int, thresh:Float, maxHashes:Int, nReducers:Int = 1):RDD[((String,V),(String,W))] = {
+    val (r, b) = calcBandParams(thresh, maxHashes)
     val nHashes = b * r
     
     val s = makeSignatures(self, shingleSize, nHashes)
@@ -124,8 +104,8 @@ class KlisterStringKeyRDDFunctions[V](self: RDD[(String, V)])
    * Uses minhashing and approximate Jaccard similarities in a full cartesian >
    * filter style algorithm.
    */
-  def approxSimilarityJoin[W](other: RDD[(String, W)], shingleSize:Int, thresh:Float, nReducers:Int = 1):RDD[((String,V),(String,W))] = {
-    val nHashes = 100
+  def approxSimilarityJoin[W](other: RDD[(String, W)], shingleSize:Int, thresh:Float, maxHashes:Int, nReducers:Int = 1):RDD[((String,V),(String,W))] = {
+    val nHashes = maxHashes
     val s = self.map(pair => {
       val shings = Similarity.hashedShingles(pair._1, shingleSize)
       val sig = Similarity.minhashSignature(nHashes, Similarity.universalHash, shings)

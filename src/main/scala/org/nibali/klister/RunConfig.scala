@@ -14,6 +14,9 @@ object RunConfig {
 	  opt[Int]("records") optional() valueName(s"[=${defaults.records}]") action {(x, c) =>
 	    c.copy(records = x)
 	  } text("approximate number of records to sample from the data set")
+	  opt[Int]("maxHashes") optional() valueName(s"[=${defaults.maxHashes}]") action {(x, c) =>
+	    c.copy(maxHashes = x)
+	  } text("maximum number of hashes used in algorithm")
 	  opt[String]("joinType") optional() valueName(s"[=${defaults.joinType}]") action {(x, c) =>
 	    c.copy(joinType = x)
 	  } text("approximate number of records to sample from the data set")
@@ -32,6 +35,7 @@ object RunConfig {
 case class RunConfig(
   nodes: Int = 4,
   records: Int = 4000,
+  maxHashes: Int = 120,
   threshold: Float = 0.7f,
   inputPath: String = "",
   joinType: String = "similarity-banding",

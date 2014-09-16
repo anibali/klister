@@ -35,16 +35,13 @@ object Main {
           	joined = numberedTweets.naiveSimilarityJoin(numberedTweets, 5, config.threshold, config.nodes)
           case "similarity-approx" =>
             println("[KLISTER] Approximate similarity join")
-          	joined = numberedTweets.approxSimilarityJoin(numberedTweets, 5, config.threshold, config.nodes)
+          	joined = numberedTweets.approxSimilarityJoin(numberedTweets, 5, config.threshold, config.maxHashes, config.nodes)
           case "similarity-banding" =>
             println("[KLISTER] Banding similarity join")
-            joined = numberedTweets.bandingSimilarityJoin(numberedTweets, 5, config.threshold, config.nodes)
-          case "similarity-banding-new" =>
-            println("[KLISTER] New banding similarity join")
-            joined = numberedTweets.bandingSimilarityJoinNew(numberedTweets, 5, config.threshold, config.nodes)
+            joined = numberedTweets.bandingSimilarityJoin(numberedTweets, 5, config.threshold, config.maxHashes, config.nodes)
           case "similarity-banding-bad" =>
             println("[KLISTER] Bad banding similarity join")
-            joined = numberedTweets.bandingSimilarityJoinBad(numberedTweets, 5, config.threshold, config.nodes)
+            joined = numberedTweets.bandingSimilarityJoinBad(numberedTweets, 5, config.threshold, config.maxHashes, config.nodes)
         }
 
         val different = joined.filter(a => a._1._2 > a._2._2).filter(a => !a._1._1.equals(a._2._1))

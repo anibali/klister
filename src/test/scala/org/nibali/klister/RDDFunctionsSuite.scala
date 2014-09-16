@@ -11,13 +11,13 @@ class RDDFunctionsSuite extends FunSuite with SharedSparkContext {
   val nReducers = 2
 
   test("quantiles") {
-    val s = sc.parallelize(Array(3, 6, 7, 8, 8, 10, 13, 15, 16, 20), 2)
+    val s = sc.parallelize(Array(3, 6, 7, 8, 8, 10, 13, 15, 16, 20), nReducers)
     val quants = s.quantiles(4, 1f)
     assert(quants.toList === List(7, 8, 15))
   }
 
   test("histo") {
-    val s = sc.parallelize(Array(3, 6, 7, 8, 8, 10, 13, 15, 16, 20), 2)
+    val s = sc.parallelize(Array(3, 6, 7, 8, 8, 10, 13, 15, 16, 20), nReducers)
     val hist = s.histo(List(10, 15, 20))
     assert(hist === Array(6, 2, 2, 0))
     val hist2 = s.histo(List(8, 8, 8))
@@ -90,7 +90,7 @@ class RDDFunctionsSuite extends FunSuite with SharedSparkContext {
   test("approxSimilarityJoin") {
     val s = sc.parallelize(Array(("rocket", 1), ("spark", 2)))
     val t = sc.parallelize(Array(("raps", "Z"), ("sprocket", "C"), ("spark", "D")))
-    val joined = s.approxSimilarityJoin(t, 2, 0.5f).collect()
+    val joined = s.approxSimilarityJoin(t, 2, 0.5f, 120, nReducers).collect()
     assert(joined.size === 2)
     assert(joined.toSet === Set(
       (("spark", 2), ("spark", "D")),
